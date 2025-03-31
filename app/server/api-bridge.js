@@ -10,7 +10,7 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const { exec, spawn } = require('child_process');
-const imageProcessingRoutes = require('./routes/imageProcessing');
+const imageProcessingRoutes = require('./routes/imageProcessing.js');
 
 const app = express();
 const PORT = process.env.PORT || 3001;

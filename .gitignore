@@ -71,3 +71,5 @@ myenv/
 ./gen_req.py
 
 kk.jpg
+
+app\.env

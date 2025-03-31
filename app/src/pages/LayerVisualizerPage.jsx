@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import TensorSpaceVisualizer from "../components/TensorSpaceVisualizer.jsx";
 import BeginnersGuide from "../components/BeginnersGuide";
+import WhyteChatbot from "../components/WhyteChatbot.jsx"; // Import the chatbot component
 import "./LayerVisualizerPage.css";
 
 function LayerVisualizerPage() {
   const [showGuide, setShowGuide] = useState(false);
-
-
 
   return (
     <div className="layer-visualizer-container">
@@ -17,6 +16,9 @@ function LayerVisualizerPage() {
           <TensorSpaceVisualizer />
         </div>
       </main>
+      <aside className="chatbot-container">
+        <WhyteChatbot /> {/* Add the chatbot component */}
+      </aside>
       <Link
         to="/explainable-ai"
         className="explainable-ai-link"
