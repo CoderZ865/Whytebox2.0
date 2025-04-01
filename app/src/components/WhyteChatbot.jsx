@@ -84,6 +84,27 @@ model = MobileNet(
 
 MobileNet V1 revolutionized mobile vision tasks by balancing accuracy and efficiency through *depthwise separable convolutions*. Its architectural simplicity and scalability make it a cornerstone for edge AI applications.  
 
+### *7. WhyteBox Visualization Features*
+
+#### *Layer Visualizer Page*
+The Layer Visualizer Page provides an interactive 3D visualization of the MobileNet V1 neural network architecture. Key features include:
+
+- *Interactive 3D Model*: Users can rotate, zoom, and explore the full network structure in three dimensions.
+- *Layer Inspection*: Clicking on any layer displays detailed information about its parameters, dimensions, and function.
+- *Activation Visualization*: Shows how neurons activate in response to different input images.
+- *Layer-by-layer Exploration*: Users can see the transformation of data as it flows through the network.
+
+#### *Explainable AI Page*
+The Explainable AI Page helps users understand how and why the model makes specific predictions through various visualization techniques:
+
+- *Grad-CAM*: Highlights regions of an image that strongly influence the model's prediction using gradients flowing into the final convolutional layer.
+- *Saliency Maps*: Shows which pixels most affect the prediction by computing gradients of the output with respect to the input.
+- *Integrated Gradients*: Attributes predictions to input features by accumulating gradients along a path from a baseline to the input.
+- *LIME*: Creates an interpretable model locally around the prediction to show which features contribute most.
+- *SHAP*: Uses a game theoretic approach to fairly distribute feature importance values.
+
+These visualization tools help users understand the internal working of neural networks, making AI more transparent and interpretable.
+
   `;
 
   const [geminiApiKey, setGeminiApiKey] = useState(import.meta.env.VITE_GEMINI_API_KEY || ''); // Load from .env
@@ -94,6 +115,7 @@ MobileNet V1 revolutionized mobile vision tasks by balancing accuracy and effici
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [minimized, setMinimized] = useState(false);
   const chatEndRef = useRef(null);
 
   // --- Effects ---
@@ -101,8 +123,11 @@ MobileNet V1 revolutionized mobile vision tasks by balancing accuracy and effici
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-
   const handleUserInput = (event) => setUserInput(event.target.value);
+
+  const toggleMinimize = () => {
+    setMinimized(!minimized);
+  };
 
   const sendMessage = async (event) => {
     event.preventDefault();
@@ -125,9 +150,14 @@ MobileNet V1 revolutionized mobile vision tasks by balancing accuracy and effici
     setIsLoading(true);
 
     const prompt = `
-      You are an AI assistant named Whyte. Your task is to answer the user's question based solely on the provided text context below.
+      You are an AI assistant named Whyte for the WhyteBox application. Your task is to answer the user's question based solely on the provided text context below.
       Do not use any external knowledge or information outside of this context.
-      If the answer cannot be found within the provided context, clearly state that by saying question is out of context.
+      If the answer cannot be found within the provided context, clearly state that the information is not available in your knowledge base.
+      
+      When users ask about visualization pages, neural network visualization, or anything related to the visualization features,
+      provide detailed explanations from section 7 of your knowledge base about the Layer Visualizer Page and Explainable AI Page.
+      
+      Make your answers conversational, helpful, and concise.
 
       --- Context Start ---
       ${pdfTextContent}
@@ -166,7 +196,7 @@ MobileNet V1 revolutionized mobile vision tasks by balancing accuracy and effici
       console.log('API Response:', data);
 
       const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-0
+
       if (botReply) {
         setMessages(prev => [...prev, { sender: 'bot', text: botReply }]);
       } else {
@@ -182,146 +212,321 @@ MobileNet V1 revolutionized mobile vision tasks by balancing accuracy and effici
   };
 
   return (
-    <div style={styles.chatbotContainer}>
-      <h2 style={styles.chatbotHeader}>Whyte</h2>
-
-      {errorMessage && <div style={styles.errorDisplay}>{errorMessage}</div>}
-
-      <div style={styles.messagesContainer}>
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            style={{
-              ...styles.messageBubble,
-              ...(msg.sender === 'user' ? styles.userMessage : styles.botMessage),
-            }}
-          >
-            <strong style={styles.senderLabel}>{msg.sender === 'user' ? 'You' : 'Whyte'}:</strong>
-            <span style={styles.messageText}>{msg.text}</span>
+    <div style={minimized ? {...styles.chatbotContainer, ...styles.minimized} : styles.chatbotContainer}>
+      <div style={styles.chatbotHeader} onClick={toggleMinimize}>
+        <div style={styles.headerContent}>
+          <div style={styles.avatarContainer}>
+            <span style={styles.avatarText}>W</span>
           </div>
-        ))}
-        {isLoading && <div style={styles.loadingIndicator}>Whyte is thinking...</div>}
-        <div ref={chatEndRef} />
+          <h2 style={styles.headerText}>Whyte</h2>
+        </div>
+        <button style={styles.minimizeButton}>
+          {minimized ? '↑' : '↓'}
+        </button>
       </div>
 
-      <form onSubmit={sendMessage} style={styles.inputForm}>
-        <input
-          type="text"
-          value={userInput}
-          onChange={handleUserInput}
-          placeholder="Ask about the Mobilenet V1..."
-          style={styles.inputFieldForm}
-          disabled={isLoading}
-        />
-        <button
-          type="submit"
-          style={styles.sendButton}
-          disabled={isLoading || !userInput.trim()}
-        >
-          Send
-        </button>
-      </form>
+      {!minimized && (
+        <>
+          {errorMessage && <div style={styles.errorDisplay}>{errorMessage}</div>}
+
+          <div style={styles.messagesContainer}>
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                  marginBottom: '12px',
+                  width: '100%',
+                }}
+              >
+                {msg.sender === 'bot' && (
+                  <div style={styles.botAvatar}>
+                    <span style={styles.botAvatarText}>W</span>
+                  </div>
+                )}
+                <div
+                  style={{
+                    ...styles.messageBubble,
+                    ...(msg.sender === 'user' ? styles.userMessage : styles.botMessage),
+                  }}
+                >
+                  <span style={styles.messageText}>{msg.text}</span>
+                </div>
+                {msg.sender === 'user' && (
+                  <div style={styles.userAvatar}>
+                    <span style={styles.userAvatarText}>U</span>
+                  </div>
+                )}
+              </div>
+            ))}
+            {isLoading && (
+              <div style={styles.loadingContainer}>
+                <div style={styles.typingIndicator}>
+                  <span style={styles.typingDot}></span>
+                  <span style={styles.typingDot}></span>
+                  <span style={styles.typingDot}></span>
+                </div>
+                <div style={styles.loadingText}>Whyte is thinking...</div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          <form onSubmit={sendMessage} style={styles.inputForm}>
+            <input
+              type="text"
+              value={userInput}
+              onChange={handleUserInput}
+              placeholder="Ask about the Mobilenet V1..."
+              style={styles.inputFieldForm}
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              style={{
+                ...styles.sendButton,
+                ...(isLoading || !userInput.trim() ? styles.sendButtonDisabled : {})
+              }}
+              disabled={isLoading || !userInput.trim()}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </form>
+        </>
+      )}
     </div>
   );
 };
 
-// --- Updated Styles ---
+// --- Enhanced Styles ---
 const styles = {
-    chatbotContainer: {
-      position: 'fixed',
-      bottom: '0',
-      right: '0',
-      width: '33vw',
-      height: '33vh',
-      zIndex: 1000,
-      border: '1px solid #2a2a3a',
-      borderRadius: '12px 12px 0 0',
-      backgroundColor: '#1a1a2e',
-      display: 'flex',
-      flexDirection: 'column',
-      boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.3)',
-      overflow: 'hidden',
-    },
-    chatbotHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      padding: '10px 15px',
-      background: 'linear-gradient(135deg, #8e9aff, #7a84e8)',
-      color: '#121212',
-      borderBottom: '1px solid #2a2a3a',
-    },
-    logo: {
-      height: '30px',
-      marginRight: '10px',
-    },
-    headerText: {
-      fontSize: '1.2rem',
-      fontWeight: 'bold',
-      margin: 0,
-    },
-    messagesContainer: {
-      flexGrow: 1,
-      overflowY: 'auto',
-      padding: '10px',
-      backgroundColor: '#121212',
-    },
-    messageBubble: {
-      padding: '10px',
-      borderRadius: '10px',
-      maxWidth: '75%',
-      wordWrap: 'break-word',
-      marginBottom: '10px',
-    },
-    userMessage: {
-      backgroundColor: '#8e9aff',
-      color: '#121212',
-      alignSelf: 'flex-end',
-    },
-    botMessage: {
-      backgroundColor: '#262631',
-      color: '#e0e0e0',
-      alignSelf: 'flex-start',
-    },
-    senderLabel: {
-      fontWeight: 'bold',
-      marginBottom: '5px',
-      fontSize: '0.85em',
-    },
-    messageText: {
-      fontSize: '0.9em',
-    },
-    loadingIndicator: {
-      textAlign: 'center',
-      color: '#8e9aff',
-      fontStyle: 'italic',
-    },
-    inputForm: {
-      display: 'flex',
-      padding: '10px',
-      borderTop: '1px solid #2a2a3a',
-      backgroundColor: '#1e1e24',
-    },
-    inputFieldForm: {
-      flexGrow: 1,
-      padding: '10px',
-      border: '1px solid #3a3a4a',
-      borderRadius: '20px',
-      marginRight: '10px',
-      fontSize: '1em',
-      backgroundColor: '#262631',
-      color: '#e0e0e0',
-    },
-    sendButton: {
-      padding: '10px 20px',
-      background: 'linear-gradient(135deg, #8e9aff, #7a84e8)',
-      color: '#121212',
-      border: 'none',
-      borderRadius: '20px',
-      cursor: 'pointer',
-      fontSize: '1em',
-      fontWeight: 'bold',
-      transition: 'all 0.3s ease',
-    },
-  };
+  chatbotContainer: {
+    position: 'fixed',
+    bottom: '20px',
+    right: '20px',
+    width: '360px',
+    height: '500px',
+    zIndex: 1000,
+    border: '1px solid rgba(142, 154, 255, 0.2)',
+    borderRadius: '16px',
+    backgroundColor: '#121218',
+    display: 'flex',
+    flexDirection: 'column',
+    boxShadow: '0px 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(142, 154, 255, 0.1)',
+    overflow: 'hidden',
+    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+  },
+  minimized: {
+    height: '60px',
+    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(142, 154, 255, 0.1)',
+  },
+  chatbotHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '12px 16px',
+    background: 'linear-gradient(135deg, #1e1e28, #262631)',
+    borderBottom: '1px solid rgba(142, 154, 255, 0.1)',
+    cursor: 'pointer',
+  },
+  headerContent: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #8e9aff, #7a84e8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: '12px',
+    boxShadow: '0 2px 10px rgba(142, 154, 255, 0.3)',
+  },
+  avatarText: {
+    color: '#121218',
+    fontWeight: 'bold',
+    fontSize: '16px',
+  },
+  headerText: {
+    fontSize: '16px',
+    fontWeight: 'bold',
+    margin: 0,
+    color: '#ffffff',
+  },
+  minimizeButton: {
+    background: 'none',
+    border: 'none',
+    color: '#8e9aff',
+    fontSize: '18px',
+    cursor: 'pointer',
+    padding: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  messagesContainer: {
+    flexGrow: 1,
+    overflowY: 'auto',
+    padding: '16px',
+    backgroundColor: '#121218',
+    display: 'flex',
+    flexDirection: 'column',
+    scrollbarWidth: 'thin',
+    scrollbarColor: '#2a2a3a #121218',
+  },
+  botAvatar: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    backgroundColor: '#8e9aff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: '8px',
+    flexShrink: 0,
+  },
+  botAvatarText: {
+    color: '#121218',
+    fontWeight: 'bold',
+    fontSize: '12px',
+  },
+  userAvatar: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    backgroundColor: '#2a2a3a',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: '8px',
+    flexShrink: 0,
+  },
+  userAvatarText: {
+    color: '#e0e0e0',
+    fontWeight: 'bold',
+    fontSize: '12px',
+  },
+  messageBubble: {
+    padding: '12px 16px',
+    borderRadius: '18px',
+    maxWidth: '70%',
+    wordWrap: 'break-word',
+    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+    position: 'relative',
+    fontSize: '14px',
+    lineHeight: '1.5',
+  },
+  userMessage: {
+    backgroundColor: '#8e9aff',
+    color: '#121218',
+    borderBottomRightRadius: '4px',
+  },
+  botMessage: {
+    backgroundColor: '#1e1e28',
+    color: '#e0e0e0',
+    borderBottomLeftRadius: '4px',
+  },
+  messageText: {
+    whiteSpace: 'pre-wrap',
+  },
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginBottom: '12px',
+  },
+  typingIndicator: {
+    display: 'flex',
+    backgroundColor: '#1e1e28',
+    padding: '12px 16px',
+    borderRadius: '18px',
+    borderBottomLeftRadius: '4px',
+  },
+  typingDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    backgroundColor: '#8e9aff',
+    margin: '0 2px',
+    display: 'inline-block',
+    animation: '1.4s typingAnimation ease-in-out infinite',
+    animationDelay: 'calc(var(--index) * 0.2s)',
+  },
+  loadingText: {
+    color: '#8e9aff',
+    fontSize: '12px',
+    marginTop: '4px',
+    marginLeft: '12px',
+  },
+  errorDisplay: {
+    padding: '8px 12px',
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    border: '1px solid rgba(255, 0, 0, 0.3)',
+    borderRadius: '4px',
+    color: '#ff5555',
+    margin: '8px 16px',
+    fontSize: '13px',
+  },
+  inputForm: {
+    display: 'flex',
+    padding: '12px 16px',
+    borderTop: '1px solid rgba(142, 154, 255, 0.1)',
+    backgroundColor: '#1a1a24',
+  },
+  inputFieldForm: {
+    flexGrow: 1,
+    padding: '12px 16px',
+    border: '1px solid rgba(142, 154, 255, 0.2)',
+    borderRadius: '24px',
+    marginRight: '10px',
+    fontSize: '14px',
+    backgroundColor: '#262631',
+    color: '#e0e0e0',
+    outline: 'none',
+    transition: 'border-color 0.2s ease',
+  },
+  sendButton: {
+    width: '40px',
+    height: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #8e9aff, #7a84e8)',
+    color: '#121218',
+    border: 'none',
+    borderRadius: '50%',
+    cursor: 'pointer',
+    fontSize: '16px',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 8px rgba(142, 154, 255, 0.3)',
+  },
+  sendButtonDisabled: {
+    background: '#3c3c48',
+    boxShadow: 'none',
+    cursor: 'not-allowed',
+    opacity: 0.7,
+  },
+};
+
+// Add CSS animation for typing dots
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
+  @keyframes typingAnimation {
+    0%, 100% { transform: translateY(0px); opacity: 0.5; }
+    50% { transform: translateY(-4px); opacity: 1; }
+  }
+`;
+document.head.appendChild(styleSheet);
+
+// Apply animation delay to each dot
+document.querySelectorAll('.typingDot').forEach((dot, index) => {
+  dot.style.setProperty('--index', index);
+});
 
 export default WhyteChatbot;
